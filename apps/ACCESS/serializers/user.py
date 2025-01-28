@@ -18,6 +18,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             "email",
             "password",
             "identity",
+            "phone_number",
             "access_token",
             "refresh_token",
         ]
