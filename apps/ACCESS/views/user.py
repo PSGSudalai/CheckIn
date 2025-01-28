@@ -145,7 +145,7 @@ class UserListAppAPIView(ListAPIViewSet):
         "identity":"Name",
         "email":"Email",
         "phone_number":"Phone Number",
-        "is_active":"Active"
+        "is_active" :"Active"
     }
 
     def get_meta_for_table(self):

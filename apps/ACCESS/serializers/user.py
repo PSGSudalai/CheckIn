@@ -15,7 +15,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "email",
+            "employee_id",
             "password",
             "identity",
             "phone_number",
@@ -23,21 +23,21 @@ class RegisterSerializer(serializers.ModelSerializer):
             "refresh_token",
         ]
         extra_kwargs = {
-            "email": {"required": True, "max_length": 150},
+            "phone_number": {"required": True, "max_length": 150},
             "identity": {"required": True},
         }
 
     def create(self, validated_data):
         """Create a new user and hash the password."""
-        email = validated_data.pop("email")
+        phone_number = validated_data.pop("phone_number")
         password = validated_data.pop("password")
 
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(phone_number=phone_number).exists():
             raise serializers.ValidationError(
-                {"email": "A user with this email already exists."}
+                {"phone_number": "A user with this phone_number already exists."}
             )
 
-        user = User.objects.create_user(email=email, **validated_data)
+        user = User.objects.create_user(phone_number=phone_number, **validated_data)
         user.set_password(password)
         user.save()
         return user
@@ -59,7 +59,7 @@ class UserListReadOnlySerializer(ReadOnlySerializer):
         fields = [
             "id",
             "uuid",
-            "email",
+            "employee_id",
             "identity",
             "phone_number",
             "is_active",

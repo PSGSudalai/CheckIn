@@ -44,23 +44,23 @@ class CheckInOutAPI(AppAPIView):
         if calculate_distance(FIXED_LATITUDE, FIXED_LONGITUDE, latitude, longitude) > MAX_DISTANCE:
             return self.send_error_response({"message": "You are out of range."})
 
-        check, created = Check.objects.get_or_create(user=user, created_at=created_at)
+        # Check if a record already exists for today
+        check = Check.objects.filter(user=user, created_at=created_at).first()
 
         if checkin:
-            if not created:
+            if check:
                 return self.send_error_response({"message": "You have already checked in today."})
+            Check.objects.create(user=user, checkin=checkin, created_at=created_at)
 
-            check.checkin = checkin
-            check.save()
             return self.send_response({"message": "Check-in time saved."})
-
+        
         if checkout:
             if not check.checkin:
-                return self.send_error_response({"message": "Cannot Check out without checking in first."})
-            
+                return self.send_error_response({"message": "Cannot check out without checking in first."})
             if check.checkout:
                 return self.send_error_response({"message": "You have already checked out today."})
 
+            # Save checkout time
             check.checkout = checkout
             check.save()
             return self.send_response({"message": "Check-out time saved."})
