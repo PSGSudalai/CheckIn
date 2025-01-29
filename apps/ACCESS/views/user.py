@@ -2,52 +2,37 @@ from django.urls import path
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from apps.ACCESS.serializers.user import RegisterSerializer, UserListReadOnlySerializer, UserWriteOnlySerializer, UserDetailSerializer
-from apps.BASE.views import AppAPIView, ListAPIViewSet, CUDAPIViewSet, AbstractLookUpFieldMixin
-from rest_framework_simplejwt.views import TokenObtainPairView
+from apps.BASE.permissions import NonAuthenticatedAPIMixin
+from apps.BASE.views import AppAPIView, ListAPIViewSet, CUDAPIViewSet, AbstractLookUpFieldMixin,AppCreateAPIView
+from django.contrib.auth import authenticate
 from apps.ACCESS.models import User
 from rest_framework.generics import RetrieveAPIView
+from rest_framework.authtoken.models import Token
+
 
 # Register View
-class RegisterView(AppAPIView):
-    permission_classes = [AllowAny]
+class RegisterView(AppCreateAPIView,NonAuthenticatedAPIMixin):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
 
-    def post(self, request, *args, **kwargs):
-        serializer = RegisterSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-
-        return self.send_response(
-            data={
-                "message": "User registered successfully.",
-                "access": serializer.data["access_token"],
-                "refresh": serializer.data["refresh_token"],
-            }
-        )
-
+   
 
 # Login View
-class LoginView(TokenObtainPairView, AppAPIView):
-    """
-    Returns JWT access and refresh tokens for valid email and password.
-    """
+class LoginView(AppAPIView):
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            tokens = serializer.validated_data
-
-            return self.send_response(
-                data={
-                    "message": "Login successful.",
-                    "access": tokens.get("access"),
-                    "refresh": tokens.get("refresh"),
-                }
-            )
-        except Exception as e:
-            return self.send_error_response(
-                data={"detail": "Invalid email or password."}
-            )
+    def post(self, request):
+        phone_number = request.data.get('phone_number')
+        password = request.data.get('password')
+        user = authenticate(phone_number=phone_number,password=password)
+        if user:
+            token, _ = Token.objects.get_or_create(user=user)
+            data ={
+                "phone_number":user.phone_number,
+                "token":token.key,
+                "uuid":user.uuid
+            }
+            return self.send_response(data=data)
+        return self.send_error_response(data={'error':'Invalid Credentials'})
 
 
 # Logout View
@@ -143,7 +128,6 @@ class UserListAppAPIView(ListAPIViewSet):
 
     all_table_columns = {
         "identity":"Name",
-        "email":"Email",
         "phone_number":"Phone Number",
         "is_active" :"Active"
     }

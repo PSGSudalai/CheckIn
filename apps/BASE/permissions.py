@@ -17,32 +17,32 @@ class AuthenticatedAPIMixin:
 
 
 from rest_framework.permissions import BasePermission
-from apps.ACCESS.models import RolePermission
 
-class RoleBasedPermission(BasePermission):
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
+
+# class RoleBasedPermission(BasePermission):
+#     def has_permission(self, request, view):
+#         if not request.user.is_authenticated:
+#             return False
         
-        # Get the role and the model the view is interacting with
-        role = request.user.role
-        model_name = getattr(view, 'model_name', None)  # Set 'model_name' in the view
+#         # Get the role and the model the view is interacting with
+#         role = request.user.role
+#         model_name = getattr(view, 'model_name', None)  # Set 'model_name' in the view
         
-        if not model_name:
-            return False
+#         if not model_name:
+#             return False
 
-        # Check the permissions for the role and model
-        try:
-            permissions = RolePermission.objects.get(role=role, model_name=model_name)
-            if request.method == "POST":  # Create
-                return permissions.can_create
-            elif request.method in ["PUT", "PATCH"]:  # Edit
-                return permissions.can_edit
-            elif request.method == "DELETE":  # Delete
-                return permissions.can_delete
-            elif request.method == "GET":  # View
-                return permissions.can_view
-        except RolePermission.DoesNotExist:
-            return False
+#         # Check the permissions for the role and model
+#         try:
+#             permissions = RolePermission.objects.get(role=role, model_name=model_name)
+#             if request.method == "POST":  # Create
+#                 return permissions.can_create
+#             elif request.method in ["PUT", "PATCH"]:  # Edit
+#                 return permissions.can_edit
+#             elif request.method == "DELETE":  # Delete
+#                 return permissions.can_delete
+#             elif request.method == "GET":  # View
+#                 return permissions.can_view
+#         except RolePermission.DoesNotExist:
+#             return False
 
-        return False
+#         return False

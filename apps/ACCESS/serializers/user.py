@@ -1,56 +1,54 @@
 from rest_framework import serializers
 from apps.ACCESS.models import User
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.authtoken.models import Token
 from apps.BASE.serializers import ReadOnlySerializer, WriteOnlySerializer
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
-        write_only=True,
-        required=True,
-        style={"input_type": "password"},
-    )
-    access_token = serializers.SerializerMethodField(read_only=True)
-    refresh_token = serializers.SerializerMethodField(read_only=True)
+   
+    token = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
-            "employee_id",
-            "password",
+            "id",
+            "uuid",
             "identity",
             "phone_number",
-            "access_token",
-            "refresh_token",
+            "password",
+            "token",
         ]
-        extra_kwargs = {
-            "phone_number": {"required": True, "max_length": 150},
-            "identity": {"required": True},
-        }
+        extra_kwargs = {"password": {"write_only": True}}
+
+    def get_token(self, obj):
+        token, _ = Token.objects.get_or_create(user=obj)
+        return token.key
 
     def create(self, validated_data):
-        """Create a new user and hash the password."""
-        phone_number = validated_data.pop("phone_number")
-        password = validated_data.pop("password")
+        phone_number = validated_data.get("phone_number")
 
         if User.objects.filter(phone_number=phone_number).exists():
             raise serializers.ValidationError(
-                {"phone_number": "A user with this phone_number already exists."}
+                {"detail": "User with this phone_number already exists."}
             )
 
-        user = User.objects.create_user(phone_number=phone_number, **validated_data)
-        user.set_password(password)
+        user = User(
+            identity=validated_data.get("identity"),
+            phone_number=validated_data.get("phone_number"),
+        )
+        user.set_password(validated_data["password"])
         user.save()
         return user
 
-    def get_access_token(self, obj):
-        """Generate the access token for the user."""
-        refresh = RefreshToken.for_user(obj)
-        return str(refresh.access_token)
 
-    def get_refresh_token(self, obj):
-        """Generate the refresh token for the user."""
-        refresh = RefreshToken.for_user(obj)
-        return str(refresh)
+    # def get_access_token(self, obj):
+    #     """Generate the access token for the user."""
+    #     refresh = RefreshToken.for_user(obj)
+    #     return str(refresh.access_token)
+
+    # def get_refresh_token(self, obj):
+    #     """Generate the refresh token for the user."""
+    #     refresh = RefreshToken.for_user(obj)
+    #     return str(refresh)
 
 
 class UserListReadOnlySerializer(ReadOnlySerializer):
@@ -71,10 +69,9 @@ class UserWriteOnlySerializer(WriteOnlySerializer):
     class Meta(WriteOnlySerializer.Meta):
         model = User
         fields = [
-            "email",
+            "employee_id",
             "identity",
             "phone_number",
-            "email",
             "is_active",
         ]
 

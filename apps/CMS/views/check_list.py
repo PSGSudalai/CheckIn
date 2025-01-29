@@ -3,7 +3,7 @@ from apps.CMS.models import Check
 from apps.CMS.serializers import CheckInReadSerializer
 from apps.ACCESS.models import User
 from django.utils.timezone import now
-from rest
+
 
 class CheckListAPIView(ListAPIViewSet):
     search_fields=["user__identity"]
@@ -11,7 +11,7 @@ class CheckListAPIView(ListAPIViewSet):
     filterset_fields={
         "checkin":["exact"],
         "checkout":["exact"],
-        "created":["gte","lte"]
+        "created_at":["gte","lte"]
     }
     queryset = Check.objects.all()
     serializer_class = CheckInReadSerializer
@@ -54,4 +54,36 @@ class AbsentListAPIView(ListAPIViewSet):
     serializer_class = CheckInReadSerializer
 
     def get_queryset(self):
-        return Check.objects.filter(checkin__isnull=True)
+        today = now().date()
+        return Check.objects.filter(checkin__isnull=True,created_at=today)
+    
+
+class UserAttendanceListAPIView(ListAPIViewSet):
+    filterset_fields={
+        "checkin":["exact"],
+        "checkout":["exact"],
+        "created_at":["gte","lte"]
+    }
+    serializer_class=CheckInReadSerializer
+    def get_queryset(self):
+        uuid = self.kwargs.get("uuid")
+        user = User.objects.get(uuid = uuid)
+        return Check.objects.filter(user =user)
+    all_table_columns={
+        "checkin" :"Chenck In",
+        "checkout":"Check Out",
+        "created_at":"Date"
+    }
+    all_filters ={
+        "created_at":"Date",
+    
+    }
+
+    def get_meta_for_table(self,*args,**kwargs):
+        data ={
+            "columns":self.all_table_columns,
+            "filters":self.all_filters,
+            "filter_data":{
+            }
+        }
+        return self.send_response(data)
