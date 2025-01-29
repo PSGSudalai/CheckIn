@@ -28,6 +28,7 @@ OTHER_APPS = [
     "django_filters",
     "rest_framework_simplejwt",
     "corsheaders",
+    "rest_framework.authtoken",
 ]
 
 CUSTOM_APPS = [
@@ -81,10 +82,7 @@ TEMPLATES = [
 # REST framework configuration
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
+        "rest_framework.authentication.TokenAuthentication",
     ),
 }
 

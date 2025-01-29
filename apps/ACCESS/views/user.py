@@ -18,42 +18,34 @@ class RegisterView(AppCreateAPIView,NonAuthenticatedAPIMixin):
    
 
 # Login View
-class LoginView(AppAPIView):
+class LoginView(AppAPIView,NonAuthenticatedAPIMixin):
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
-        phone_number = request.data.get('phone_number')
-        password = request.data.get('password')
-        user = authenticate(phone_number=phone_number,password=password)
-        if user:
-            token, _ = Token.objects.get_or_create(user=user)
-            data ={
-                "phone_number":user.phone_number,
-                "token":token.key,
-                "uuid":user.uuid
-            }
-            return self.send_response(data=data)
-        return self.send_error_response(data={'error':'Invalid Credentials'})
+        phone_number = request.data.get("phone_number")
+        password = request.data.get("password")
+        breakpoint()
 
+        user = authenticate(phone_number=phone_number,password=password)
+        token, _ = Token.objects.get_or_create(user=user)
+        data = {
+            "phone_number": user.phone_number,
+            "token": token.key,  
+        }
+        return self.send_response(data=data)
 
 # Logout View
 class LogoutView(AppAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        try:
-            refresh_token = request.data.get("refresh")
-            if not refresh_token:
-                raise ValueError("Refresh token is required.")
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return self.send_response(
-                data={"message": "Logout successful."}
-            )
-        except Exception as e:
-            return self.send_error_response(
-                data={"error": "Invalid token or token already blacklisted."}
-            )
-
+        user= self.get_authenticated_user()
+        if user:
+            Token.objects.filter(user=user).delete()
+        return self.send_response(data={"Successfully logged out"})
+            
+       
 
 # class GetAuthUserDetails(AppAPIView):
 #     permission_classes = [IsAuthenticated]
