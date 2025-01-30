@@ -33,6 +33,7 @@ class LoginView(AppAPIView, NonAuthenticatedAPIMixin):
             data = {
                 "phone_number": user.phone_number,
                 "token": token.key,
+                "uuid":user.uuid
             }
             return self.send_response(data=data)
 

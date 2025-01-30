@@ -83,7 +83,7 @@ class UserDetailSerializer(ReadOnlySerializer):
         fields = [
             "id",
             "uuid",
-            "email",
+            "employee_id",
             "identity",
             "phone_number",
             "is_active",
