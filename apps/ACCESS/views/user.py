@@ -26,7 +26,6 @@ class LoginView(AppAPIView, NonAuthenticatedAPIMixin):
         phone_number = request.data.get("phone_number")
         password = request.data.get("password")
 
-        # Authenticate user with named arguments
         user = authenticate(request, phone_number=phone_number, password=password)
 
         if user:
@@ -37,11 +36,10 @@ class LoginView(AppAPIView, NonAuthenticatedAPIMixin):
             }
             return self.send_response(data=data)
 
-        return self.send_error_response(
-            {"message": "Invalid phone number or password."}
-        )
+        return self.send_error_response({"message": "Invalid phone number or password."})
 
-# Logout View
+
+# Logout View 
 class LogoutView(AppAPIView):
     permission_classes = [IsAuthenticated]
 

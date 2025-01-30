@@ -34,8 +34,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User(
             identity=validated_data.get("identity"),
             phone_number=validated_data.get("phone_number"),
-            password=validated_data.get("password"),
         )
+        user.set_password(validated_data.get("password"))
         user.save()
         return user
 
