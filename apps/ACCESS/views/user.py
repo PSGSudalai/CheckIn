@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate
 from apps.ACCESS.models import User
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.authtoken.models import Token
+from django.contrib.auth import logout as django_logout
 
 
 # Register View
@@ -17,23 +18,28 @@ class RegisterView(AppCreateAPIView,NonAuthenticatedAPIMixin):
 
    
 
-# Login View
-class LoginView(AppAPIView,NonAuthenticatedAPIMixin):
+class LoginView(AppAPIView, NonAuthenticatedAPIMixin):
     permission_classes = [AllowAny]
     authentication_classes = []
 
     def post(self, request):
         phone_number = request.data.get("phone_number")
         password = request.data.get("password")
-        breakpoint()
 
-        user = authenticate(phone_number=phone_number,password=password)
-        token, _ = Token.objects.get_or_create(user=user)
-        data = {
-            "phone_number": user.phone_number,
-            "token": token.key,  
-        }
-        return self.send_response(data=data)
+        # Authenticate user with named arguments
+        user = authenticate(request, phone_number=phone_number, password=password)
+
+        if user:
+            token, _ = Token.objects.get_or_create(user=user)
+            data = {
+                "phone_number": user.phone_number,
+                "token": token.key,
+            }
+            return self.send_response(data=data)
+
+        return self.send_error_response(
+            {"message": "Invalid phone number or password."}
+        )
 
 # Logout View
 class LogoutView(AppAPIView):
@@ -43,6 +49,7 @@ class LogoutView(AppAPIView):
         user= self.get_authenticated_user()
         if user:
             Token.objects.filter(user=user).delete()
+        django_logout(request)
         return self.send_response(data={"Successfully logged out"})
             
        

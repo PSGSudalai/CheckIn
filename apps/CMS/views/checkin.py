@@ -22,47 +22,57 @@ class CheckInOutAPI(AppAPIView):
     def post(self, request):
         user = self.get_authenticated_user()
         if not user:
-            return self.send_error_response({"message": "User authentication required."})
+            return self.send_error_response(
+                {"message": "User authentication required."}
+            )
 
-        checkin = request.data.get("checkin")
-        checkout = request.data.get("checkout")
-        created_at = request.data.get("created_at", now().date())
+        punch_in, punch_out, punch_date = (
+            request.data.get("punch_in"),
+            request.data.get("punch_out"),
+            request.data.get("punch_date"),
+        )
         location = request.data.get("location", {})
-
         latitude, longitude = location.get("latitude"), location.get("longitude")
 
-        # Validate latitude and longitude presence
         if latitude is None or longitude is None:
-            return self.send_error_response({"message": "Latitude and longitude are required."})
+            return self.send_error_response(
+                {"message": "Latitude and longitude are required."}
+            )
 
         try:
             latitude, longitude = float(latitude), float(longitude)
         except ValueError:
-            return self.send_error_response({"message": "Invalid latitude or longitude."})
+            return self.send_error_response(
+                {"message": "Invalid latitude or longitude."}
+            )
 
-        # Check if user is within 100 meters radius
-        if calculate_distance(FIXED_LATITUDE, FIXED_LONGITUDE, latitude, longitude) > MAX_DISTANCE:
+        if (
+            calculate_distance(FIXED_LATITUDE, FIXED_LONGITUDE, latitude, longitude)
+            > MAX_DISTANCE
+        ):
             return self.send_error_response({"message": "You are out of range."})
 
-        # Check if a record already exists for today
-        check = Check.objects.filter(user=user, created_at=created_at).first()
+        punch = Check.objects.filter(user=user, punch_date=punch_date).first()
 
-        if checkin:
-            if check:
-                return self.send_error_response({"message": "You have already checked in today."})
-            Check.objects.create(user=user, checkin=checkin, created_at=created_at)
+        if punch_in:
+            if punch:
+                return self.send_error_response(
+                    {"message": "You have already punched in today."}
+                )
+            Check.objects.create(user=user, punch_in=punch_in, punch_date=punch_date)
+            return self.send_response({"message": "Punch in time saved."})
 
-            return self.send_response({"message": "Check-in time saved."})
-        
-        if checkout:
-            if not check.checkin:
-                return self.send_error_response({"message": "Cannot check out without checking in first."})
-            if check.checkout:
-                return self.send_error_response({"message": "You have already checked out today."})
-
-            # Save checkout time
-            check.checkout = checkout
-            check.save()
-            return self.send_response({"message": "Check-out time saved."})
+        if punch_out:
+            if not punch or not punch.punch_in:
+                return self.send_error_response(
+                    {"message": "Cannot punch out without punching in first."}
+                )
+            if punch.punch_out:
+                return self.send_error_response(
+                    {"message": "You have already punched out today."}
+                )
+            punch.punch_out = punch_out
+            punch.save()
+            return self.send_response({"message": "Punch out time saved."})
 
         return self.send_error_response({"message": "Invalid request or conditions not met."})
