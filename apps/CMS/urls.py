@@ -3,7 +3,15 @@ from django.urls import path
 
 #Bulk-Upload-Files
 from HELPERS import BulkFileUploadView, ActiveStatusChange, ArchieveStatusChange
-from apps.CMS.views import CheckInOutAPI,CheckListAPIView,PresentListAPIView,AbsentListAPIView,UserAttendanceListAPIView,DashboardAPIView
+from apps.CMS.views import (
+    CheckInOutAPI,
+    CheckListAPIView,
+    PresentListAPIView,
+    AbsentListAPIView,
+    UserAttendanceListAPIView,
+    DashboardAPIView,
+    UserPunchHistory
+)
 from apps.CMS.views.Report import AttendanceAPIView
 
 app_name = "cms"
@@ -20,5 +28,7 @@ urlpatterns = [
     path("check/attendance/<uuid>/table-meta/", UserAttendanceListAPIView.as_view({'get': 'get_meta_for_table'}), name="attendance-users"),
     path("dashboard/", DashboardAPIView.as_view()),
      path("attendance/report/", AttendanceAPIView),
+     path("punch-history/", UserPunchHistory.as_view(), name="user-punch-history"),
+  
    
 ] + router.urls

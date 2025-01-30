@@ -37,7 +37,7 @@ class LoginView(AppAPIView, NonAuthenticatedAPIMixin):
             }
             return self.send_response(data=data)
 
-        return self.send_error_response({"message": "Invalid phone number or password."})
+        return self.send_error_response(data={"message": "Invalid phone number or password."})
 
 
 # Logout View 

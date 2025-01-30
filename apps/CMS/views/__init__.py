@@ -1,3 +1,3 @@
-from .checkin import CheckInOutAPI
+from .checkin import CheckInOutAPI,UserPunchHistory
 from .check_list import CheckListAPIView,PresentListAPIView,AbsentListAPIView,UserAttendanceListAPIView
 from .dashboard import DashboardAPIView

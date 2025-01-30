@@ -76,3 +76,25 @@ class CheckInOutAPI(AppAPIView):
             return self.send_response({"message": "Punch out time saved."})
 
         return self.send_error_response({"message": "Invalid request or conditions not met."})
+    
+
+
+
+class UserPunchHistory(AppAPIView):
+    def get(self, request):
+        user = self.get_authenticated_user()
+        if not user:
+            return self.send_error_response(
+                {"message": "User authentication required."}
+            )
+
+        punches = Check.objects.filter(user=user).order_by("punch_date")
+        punch_data = [
+            {
+                "punch_date": punch.punch_date,
+                "punch_in": punch.punch_in,
+                "punch_out": punch.punch_out,
+            }
+            for punch in punches
+        ]
+        return self.send_response({"punch_data": punch_data})
